@@ -1,15 +1,17 @@
-import {products} from './products.js';
-import {formatCurrency} from './money.js';
- 
+//single-product.js
+import {getProduct, products } from './checkout/products.js';
+import { formatCurrency } from './checkout/money.js';
+import {cart, addToCart} from './checkout/cart.js';
+
 // Function to extract query parameters from URL
 function getQueryParams() {
   const params = {};
   const queryString = window.location.search.substring(1);
-  const regex = /([^&=]+)=([^&]*)/g;
-  let m;
-  while (m = regex.exec(queryString)) {
-      params[decodeURIComponent(m[1])] = decodeURIComponent(m[2]);
-  }
+  const pairs = queryString.split('&');
+    for (const pair of pairs) {
+        const [key, value] = pair.split('=');
+        params[decodeURIComponent(key)] = decodeURIComponent(value);
+    }
   return params;
 }
 
@@ -18,12 +20,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const params = getQueryParams();
   const product = getProduct(params.productId);
   renderProductDetails(product);
-  setupQuantityHandlers();
+  setupQuantityHandlers(product);
+
 });
 
 // Render product details
 function renderProductDetails(product) {
-  let productHTML = `<div class="col-lg-4">
+  let productHTML = `
+  <div class="row">
+  <div class="col-lg-8">
+  <div class="left-images">
+      <img src="${product.image}" alt="">
+      <img src="assets/images/single_product01.webp" alt="">
+  </div>
+</div>
+<div class="col-lg-4">
   <div class="right-content">
       <h4>${product.brand}</h4>
       <h4 style="font-weight: normal;">${product.name}</h4>
@@ -41,7 +52,7 @@ function renderProductDetails(product) {
         </div>
       <!-- End Rating Star Area-->  
 
-      <span class="price">$229.99</span>
+      <span class="price">$${product.priceCents/100}</span>
       <ul class="stars">
           <li><i class="fa fa-star"></i></li>
           <li><i class="fa fa-star"></i></li>
@@ -58,42 +69,86 @@ function renderProductDetails(product) {
           </div>
           <div class="right-content">
               <div class="quantity buttons_added">
-                  <input type="button" value="-" class="minus"><input type="number" step="1" min="1" max="" name="quantity" value="1" title="Qty" class="input-text qty text" size="4" pattern="" inputmode=""><input type="button" value="+" class="plus">
+                  <input type="button" value="-" class="minus"><input type="number" step="1" min="1" max="" name="quantity" value="1" title="Qty" class="input-text qty text quantityInput"  size="4" pattern="" inputmode=""><input type="button" value="+" class="plus">
               </div>
           </div>
       </div>
       <div class="total">
-          <h4>Total${product.price*2}</h4>
-          <div class="main-border-button"><a href="#">Add To Cart</a></div>
+          <h4>Total $${product.priceCents/100}</h4>
+          <div class="main-border-button js-add-to-cart" data-product-id="${product.id}"><a href="#">Add To Cart</a></div>
       </div>
 
   </div>
-</div>`
+</div>`;
 
-document.querySelector('.product-detail-container').innerHTML = productHTML; // Make sure this selector points to an existing element
-setupQuantityHandlers(product)
-}
+document.querySelector('.js-product-detail-container').innerHTML = productHTML; // Make sure this selector points to an existing element
 
+let initialTotal = product.priceCents / 100;
+document.querySelector('.total h4').innerText = `Total: $${initialTotal}`;
+
+
+if (!document.querySelector('.js-add-to-cart').hasAttribute('data-listener-set')) {
+    document.querySelector('.js-add-to-cart').addEventListener('click', function() {
+        const quantity = parseInt(document.querySelector('#quantityInput').value);
+        addToCart(product.id, quantity);
+    });
+    document.querySelector('.js-add-to-cart').setAttribute('data-listener-set', 'true');
+}}
+
+
+// // Setup quantity change handlers
+// function setupQuantityHandlers(product) {
+//   const quantityInput = document.querySelector('.input-text.qty');
+//   const totalDisplay = document.querySelector('.total h4');
+
+//   document.querySelector('.plus').addEventListener('click', () => {
+//       quantityInput.value = parseInt(quantityInput.value) + 1;
+//       updateTotal(product);
+//   });
+
+//   document.querySelector('.minus').addEventListener('click', () => {
+//       if (quantityInput.value > 1) {
+//           quantityInput.value = parseInt(quantityInput.value) - 1;
+//           updateTotal(product);
+//       }
+//   });
+
+
+//   // Assuming getProductPrice returns the price of the product
+//   function updateTotal(product) {
+    
+//     const totalPrice = (product.priceCents / 100) * parseInt(quantityInput.value);
+//       totalDisplay.innerText = `Total: $${totalPrice.toFixed(2)}`;
+//   }
+// }
 // Setup quantity change handlers
-function setupQuantityHandlers() {
-  const quantityInput = document.querySelector('.input-text.qty');
-  const totalDisplay = document.querySelector('.total h4');
 
-  document.querySelector('.plus').addEventListener('click', () => {
-      quantityInput.value = parseInt(quantityInput.value) + 1;
-      updateTotal();
-  });
+function setupQuantityHandlers(product) {
+    const quantityInput = document.querySelector('#quantityInput');
+    const totalDisplay = document.querySelector('.total h4');
 
-  document.querySelector('.minus').addEventListener('click', () => {
-      if (quantityInput.value > 1) {
-          quantityInput.value = parseInt(quantityInput.value) - 1;
-          updateTotal();
-      }
-  });
+    function updateTotal() {
+        const newQuantity = parseInt(quantityInput.value);
+        const totalPrice = (product.priceCents / 100) * newQuantity;
+        totalDisplay.innerText = `Total: $${totalPrice.toFixed(2)}`;
+    }
 
-  function updateTotal() {
-      // Assuming getProductPrice returns the price of the product
-      const totalPrice = getProductPrice(product.id) * quantityInput.value;
-      totalDisplay.innerText = `Total: $${totalPrice.toFixed(2)}`;
-  }
+    // Initialize total
+    updateTotal();
+
+    if (!quantityInput.hasAttribute('data-listeners-set')) {
+        document.querySelector('.plus').addEventListener('click', () => {
+            quantityInput.value = parseInt(quantityInput.value) + 1;
+            updateTotal();
+        });
+
+        document.querySelector('.minus').addEventListener('click', () => {
+            if (quantityInput.value > 1) {
+                quantityInput.value = parseInt(quantityInput.value) - 1;
+                updateTotal();
+            }
+        });
+
+        quantityInput.setAttribute('data-listeners-set', 'true');
+    }
 }

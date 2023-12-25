@@ -19,8 +19,8 @@ function renderProducts(category, page = 1) {
             <div class="thumb">
                 <div class="hover-content">
                     <ul>
-                        <li><a href="single-product.html"><i class="fa fa-eye"></i></a></li>
-                        <li><a href="single-product.html"><i class="fa fa-star"></i></a></li>
+                        <li><a href="single-product.html?productId=${product.id}"><i class="fa fa-eye"></i></a></li>
+                        <li><a href="single-product.html?productId=${product.id}"><i class="fa fa-star"></i></a></li>
                         <li><a><i class="fa fa-shopping-cart button-primary js-add-to-cart" data-product-id="${product.id}"></i></a></li>
                     </ul>
                 </div>
