@@ -69,7 +69,7 @@ function renderProductDetails(product) {
           </div>
           <div class="right-content">
               <div class="quantity buttons_added">
-                  <input type="button" value="-" class="minus"><input type="number" step="1" min="1" max="" name="quantity" value="1" title="Qty" class="input-text qty text quantityInput"  size="4" pattern="" inputmode=""><input type="button" value="+" class="plus">
+                  <input type="button" value="-" class="minus"><input type="number" step="1" min="1" max="" name="quantity"  title="Qty" class="input-text qty text quantityInput"  size="4" pattern="" inputmode=""><input type="button" value="+" class="plus">
               </div>
           </div>
       </div>
@@ -89,66 +89,39 @@ document.querySelector('.total h4').innerText = `Total: $${initialTotal}`;
 
 if (!document.querySelector('.js-add-to-cart').hasAttribute('data-listener-set')) {
     document.querySelector('.js-add-to-cart').addEventListener('click', function() {
-        const quantity = parseInt(document.querySelector('#quantityInput').value);
+        const quantity = parseInt(document.querySelector('.quantityInput').value);
         addToCart(product.id, quantity);
     });
     document.querySelector('.js-add-to-cart').setAttribute('data-listener-set', 'true');
 }}
 
-
-// // Setup quantity change handlers
-// function setupQuantityHandlers(product) {
-//   const quantityInput = document.querySelector('.input-text.qty');
-//   const totalDisplay = document.querySelector('.total h4');
-
-//   document.querySelector('.plus').addEventListener('click', () => {
-//       quantityInput.value = parseInt(quantityInput.value) + 1;
-//       updateTotal(product);
-//   });
-
-//   document.querySelector('.minus').addEventListener('click', () => {
-//       if (quantityInput.value > 1) {
-//           quantityInput.value = parseInt(quantityInput.value) - 1;
-//           updateTotal(product);
-//       }
-//   });
-
-
-//   // Assuming getProductPrice returns the price of the product
-//   function updateTotal(product) {
-    
-//     const totalPrice = (product.priceCents / 100) * parseInt(quantityInput.value);
-//       totalDisplay.innerText = `Total: $${totalPrice.toFixed(2)}`;
-//   }
-// }
-// Setup quantity change handlers
-
 function setupQuantityHandlers(product) {
-    const quantityInput = document.querySelector('#quantityInput');
+    const quantityInput = document.querySelector('.quantityInput');
     const totalDisplay = document.querySelector('.total h4');
 
     function updateTotal() {
-        const newQuantity = parseInt(quantityInput.value);
-        const totalPrice = (product.priceCents / 100) * newQuantity;
+        let currentQuantity = parseInt(quantityInput.value);
+
+        // Ensure the quantity is at least 1
+        if (isNaN(currentQuantity) || currentQuantity < 1) {
+            currentQuantity = 1;
+            quantityInput.value = currentQuantity;
+        }
+
+        const totalPrice = (product.priceCents / 100) * currentQuantity;
         totalDisplay.innerText = `Total: $${totalPrice.toFixed(2)}`;
     }
 
-    // Initialize total
+    // Set default quantity to 1 and initialize total
+    quantityInput.value = 1;
     updateTotal();
 
-    if (!quantityInput.hasAttribute('data-listeners-set')) {
-        document.querySelector('.plus').addEventListener('click', () => {
-            quantityInput.value = parseInt(quantityInput.value) + 1;
-            updateTotal();
-        });
+    quantityInput.addEventListener('input', updateTotal);
 
-        document.querySelector('.minus').addEventListener('click', () => {
-            if (quantityInput.value > 1) {
-                quantityInput.value = parseInt(quantityInput.value) - 1;
-                updateTotal();
-            }
-        });
+    const updateTotalWithDelay = () => setTimeout(updateTotal, 10);
 
-        quantityInput.setAttribute('data-listeners-set', 'true');
-    }
+    document.querySelector('.plus').addEventListener('click', updateTotalWithDelay);
+    document.querySelector('.minus').addEventListener('click', updateTotalWithDelay);
 }
+
+
