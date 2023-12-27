@@ -59,10 +59,11 @@ export function renderPaymentSummary() {
         $${formatCurrency(totalCents)}
       </div>
     </div>
-
-    <button class="place-order-button button-primary">
-      Place your order
+    <a href="your-orders.html">
+    <button class="place-order-button button-primary">  
+    Go to checkout    
     </button>
+    </a>
   `;
 
   document.querySelector('.js-payment-summary')
